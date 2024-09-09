@@ -8,7 +8,8 @@ import model.entities.Pessoa;
 public interface LivroDao {
 	
 	void insert(Livro livro); // INSERIR LIVROS
-	void update(Livro livro, Pessoa pessoa); // ATUALIZAR PARA DÍSPONÍVEL OU NÃO DÍSPONIVEL
+	void updateDisponivel(Livro livro, Pessoa pessoa); // ATUALIZAR PARA DÍSPONÍVEL OU NÃO DÍSPONIVEL
+	void updateEmprestimo(Livro livro, Pessoa pessoa);
 	void delete(Livro livro); // DELETAR POR ID
 	Livro findById(Integer integer); // ENCONTRAR LIVRO PELO ID
 	List<Livro> findAll(); // ENCONTRAR TODOS OS LIVROS

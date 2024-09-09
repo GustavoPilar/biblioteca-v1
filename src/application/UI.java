@@ -34,12 +34,12 @@ public final class UI {
 	}
 	
 	public static void login() {
-		System.out.print("Usuario: ");
-		String nome = Main.sc.nextLine();
+		System.out.print("E-mail: ");
+		String email = Main.sc.nextLine();
 		System.out.print("Senha: ");
 		String senha = Main.sc.nextLine();
 		
-		Pessoa pessoa = conferirUsuario(nome, senha);
+		Pessoa pessoa = conferirUsuario(email, senha);
 		
 		if (pessoa != null) {
 			menu(pessoa);
@@ -63,30 +63,54 @@ public final class UI {
 		System.out.print("Usuario: ");
 		pessoa.setNome(Main.sc.nextLine());
 		System.out.print("Senha: ");
-		pessoa.setSenha(Main.sc.nextLine());
+		pessoa.setSenha(conferirSenha());
 		System.out.print("E-mail: ");
-		pessoa.setEmail(Main.sc.nextLine());
+		pessoa.setEmail(conferirEmail());
 		
-		System.out.println("Usuário " + pessoa.getNome() + " cadastrado.");
+		pessoaDao.insert(pessoa);
 		menu(pessoa);
 	}
 	
-	public static Pessoa conferirUsuario(String nome, String senha) {
-		Pessoa pessoa = pessoaDao.findUser(senha);
+	public static String conferirSenha() {
+		String senha = Main.sc.nextLine();
 		
-		if (pessoa == null) {
-			System.out.println("Usuário não encontrado");
+		while (senha.length() < 8 || senha.length() > 15) {
+			System.out.print("A senha deverá conter entre 8 a 15 caracteres.\nDigite novamente: ");
+			senha = Main.sc.nextLine();
+		}
+		
+		return senha;
+	}
+	
+	public static String conferirEmail() {
+		String email = Main.sc.next();
+		Main.sc.nextLine();
+		
+		while (pessoaDao.findByEmail(email)) {
+			System.out.print("Email já cadastrado. Digite novamente: ");
+			email = Main.sc.next();
+			Main.sc.nextLine();
+		}
+		
+		return email;
+	}
+	
+	public static Pessoa conferirUsuario(String email, String senha) {
+		
+		if (!pessoaDao.findByEmail(email)) {
+			System.out.println("E-mail não encontrado.");
 			return null;
 		}
-		else {
-			if (pessoa.getNome().equals(nome) && pessoa.getSenha().equals(senha)) {
-				return pessoa;
-			}
-			else {
-				System.out.println("Usuário não encontrado.");
-				return null;
-			}
+		
+		Pessoa pessoa = pessoaDao.findUser(senha, email);
+		
+		while (pessoa == null) {
+			System.out.print("Senha incorreta. Digite novamente: ");
+			senha = Main.sc.nextLine();
+			pessoa = pessoaDao.findUser(senha, email);
 		}
+		
+		return pessoa;
 	}
 	
 	public static void menu(Pessoa pessoa) {
@@ -118,8 +142,8 @@ public final class UI {
 		int opcao;
 		
 		do {
-			List<Livro> livros = livroDao.findAll();
-			verLista(livros);
+			livroDao.findAll();
+			verLista(livroDao.findAll());
 			System.out.println("|-------------|");
 			System.out.println("[1] - Ver livro");
 			System.out.println("[2] - Voltar");
@@ -127,7 +151,7 @@ public final class UI {
 			
 			switch (opcao) {
 				case 1:
-					verLivro(livros, "Emprestar", pessoa);
+					verLivro(livroDao.findAll(), "Emprestar", pessoa);
 					break;					
 				default: 
 					System.out.println("Voltando...");
@@ -164,8 +188,7 @@ public final class UI {
 		
 		do {
 			pessoa.setLivrosEmprestados(pessoaDao.findAll(pessoa));
-			List<Livro> livros = pessoa.getLivrosEmprestados();
-			verLista(livros);
+			verLista(pessoa.getLivrosEmprestados());
 			System.out.println("|-------------|");
 			System.out.println("[1] - Ver livro");
 			System.out.println("[2] - Voltar");
@@ -173,7 +196,7 @@ public final class UI {
 			
 			switch (opcao) {
 				case 1:
-					verLivro(livros, "Devolver", pessoa);
+					verLivro(pessoa.getLivrosEmprestados(), "Devolver", pessoa);
 					break;
 				default: 
 					System.out.println("Voltando.");
@@ -224,7 +247,7 @@ public final class UI {
 		
 		switch (opcao) {
 		case 1:
-			livroDao.update(livro, pessoa);
+			livroDao.updateDisponivel(livro, pessoa);
 			break;
 		default:
 			System.out.println("Voltando...");		

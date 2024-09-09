@@ -56,29 +56,20 @@ public final class LivroDaoJDBC implements LivroDao {
 	}
 
 	@Override
-	public void update(Livro livro, Pessoa pessoa) {
+	public void updateDisponivel(Livro livro, Pessoa pessoa) {
 		PreparedStatement st = null;
 		
 		try {
 			st = conn.prepareStatement("UPDATE livro SET Disponivel = ? WHERE Id = ?");
 			
-			st.setBoolean(1, !livro.getDisponivel()); // 1 -> 0
+			st.setBoolean(1, !livro.getDisponivel()); // 1 -> 0 || 0 -> 1
 			st.setInt(2, livro.getId());
 			
 			int linhasAtualizadas = st.executeUpdate();
 			
 			if (linhasAtualizadas > 0) {
 				if (livro.getDisponivel()) {					
-					conn.prepareStatement("INSERT INTO livroEmprestado (Id_Usuario, Id_Livro) VALUES (?, ?)");
-					st.setInt(1, livro.getId());
-					st.setInt(1, pessoa.getId());
-					
-					int rowsInserted = st.executeUpdate();
-					
-					if (rowsInserted > 0) {
-						System.out.println("Registro de empréstimo inserido com sucesso!");
-					}
-					
+					updateEmprestimo(livro, pessoa);
 					
 				}
 				else {
@@ -86,7 +77,29 @@ public final class LivroDaoJDBC implements LivroDao {
 					delete(livro);
 				}
 			}
-			// PROBLEMA NO UPDATE
+		}
+		catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		finally {
+			DB.closeStatement(st);
+		}
+	}
+	
+	@Override
+	public void updateEmprestimo(Livro livro, Pessoa pessoa) {
+		PreparedStatement st = null;
+		
+		try {
+			st = conn.prepareStatement("INSERT INTO livroEmprestado (Id_Livro, Id_Usuario) VALUES (?, ?)");
+			st.setInt(1, livro.getId());
+			st.setInt(2, pessoa.getId());
+			
+			int rowsInserted = st.executeUpdate();
+			
+			if (rowsInserted > 0) {
+				System.out.println("Registro de empréstimo inserido com sucesso!");
+			}
 		}
 		catch (SQLException e) {
 			throw new DbException(e.getMessage());
