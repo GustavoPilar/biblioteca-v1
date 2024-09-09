@@ -65,23 +65,28 @@ public final class LivroDaoJDBC implements LivroDao {
 			st.setBoolean(1, !livro.getDisponivel()); // 1 -> 0
 			st.setInt(2, livro.getId());
 			
-			int sucesso = st.executeUpdate();
+			int linhasAtualizadas = st.executeUpdate();
 			
-			if (sucesso > 0) {
+			if (linhasAtualizadas > 0) {
 				if (livro.getDisponivel()) {					
-					System.out.println("Livro emprestado.");
-					conn.prepareStatement("INSERT INTO livroEmprestado (Id_Livro, Id_Usuario) VALUES (?, ?)");
+					conn.prepareStatement("INSERT INTO livroEmprestado (Id_Usuario, Id_Livro) VALUES (?, ?)");
 					st.setInt(1, livro.getId());
 					st.setInt(1, pessoa.getId());
 					
-					st.executeUpdate();
+					int rowsInserted = st.executeUpdate();
+					
+					if (rowsInserted > 0) {
+						System.out.println("Registro de empréstimo inserido com sucesso!");
+					}
+					
+					
 				}
 				else {
-					System.out.println("Livro devolvido.");
+					System.out.println("Registro de devolução inserido com sucesso!");
 					delete(livro);
 				}
 			}
-			
+			// PROBLEMA NO UPDATE
 		}
 		catch (SQLException e) {
 			throw new DbException(e.getMessage());
